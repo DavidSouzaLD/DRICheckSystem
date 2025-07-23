@@ -1,25 +1,25 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { type Checklist as ChecklistType, type ChecklistItemData } from '../types';
 import { ChecklistItem } from './ChecklistItem';
 
 interface ChecklistProps {
-  checklist: ChecklistType;
+  groupedChecklist: Record<string, ChecklistType>;
+  checkedItems: Record<string, boolean>;
+  comments: Record<string, string>;
+  onToggleCheck: (id: string) => void;
+  onCommentChange: (id: string, text: string) => void;
 }
 
-export const Checklist: React.FC<ChecklistProps> = ({ checklist }) => {
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+export const Checklist: React.FC<ChecklistProps> = ({
+  groupedChecklist,
+  checkedItems,
+  comments,
+  onToggleCheck,
+  onCommentChange
+}) => {
   const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
 
-  const groupedChecklist: Record<string, ChecklistType> = useMemo(() => {
-    return checklist.reduce((acc, item) => {
-      (acc[item.category] = acc[item.category] || []).push(item);
-      return acc;
-    }, {} as Record<string, ChecklistType>);
-  }, [checklist]);
-
   useEffect(() => {
-    // Reset states when checklist changes
-    setCheckedItems({});
     setVisibleItems(new Set<string>());
 
     let delay = 0;
@@ -34,10 +34,6 @@ export const Checklist: React.FC<ChecklistProps> = ({ checklist }) => {
     return () => timers.forEach(clearTimeout);
   }, [groupedChecklist]);
 
-
-  const handleToggleCheck = (id: string) => {
-    setCheckedItems(prev => ({ ...prev, [id]: !prev[id] }));
-  };
 
   const getCategoryProgress = (categoryItems: ChecklistItemData[]) => {
       if (categoryItems.length === 0) return 0;
@@ -62,11 +58,13 @@ export const Checklist: React.FC<ChecklistProps> = ({ checklist }) => {
                 <div className="space-y-3">
                 {items.map((item) => (
                     <ChecklistItem
-                    key={item.id}
-                    item={item}
-                    isChecked={!!checkedItems[item.id]}
-                    onToggleCheck={() => handleToggleCheck(item.id)}
-                    isVisible={visibleItems.has(item.id)}
+                      key={item.id}
+                      item={item}
+                      isChecked={!!checkedItems[item.id]}
+                      onToggleCheck={() => onToggleCheck(item.id)}
+                      isVisible={visibleItems.has(item.id)}
+                      comment={comments[item.id] || ''}
+                      onCommentChange={onCommentChange}
                     />
                 ))}
                 </div>
