@@ -1,0 +1,105 @@
+import { type Checklist, type ChecklistItemData, type Device } from '../types';
+
+const PREDEFINED_CHECKLISTS: Record<Device, Omit<ChecklistItemData, 'id'>[]> = {
+  iPhone: [
+    { category: 'Condição Física', item: 'Inspecionar chassi (arranhões, amassados)' },
+    { category: 'Condição Física', item: 'Inspecionar tela (riscos, trincos)' },
+    { category: 'Condição Física', item: 'Verificar botões físicos (clique, resposta)' },
+    { category: 'Tela', item: 'Teste de touch screen (todos os pontos)' },
+    { category: 'Tela', item: 'Verificar pixels mortos ou manchas (fundo branco/preto)' },
+    { category: 'Tela', item: 'Teste de brilho e True Tone' },
+    { category: 'Câmeras', item: 'Câmera traseira (Foto, Vídeo, Foco)' },
+    { category: 'Câmeras', item: 'Câmera frontal (Foto, Vídeo, Modo Retrato)' },
+    { category: 'Câmeras', item: 'Flash e Lanterna' },
+    { category: 'Áudio', item: 'Alto-falante superior (chamadas)' },
+    { category: 'Áudio', item: 'Alto-falante inferior (mídia)' },
+    { category: 'Áudio', item: 'Microfones (gravação de voz, viva-voz)' },
+    { category: 'Bateria e Carregamento', item: 'Saúde da bateria (em Ajustes)' },
+    { category: 'Bateria e Carregamento', item: 'Teste de carregamento (cabo e wireless se aplicável)' },
+    { category: 'Bateria e Carregamento', item: 'Conector de carregamento (limpeza, danos)' },
+    { category: 'Conectividade', item: 'Wi-Fi (conectar e navegar)' },
+    { category: 'Conectividade', item: 'Bluetooth (conectar a acessório)' },
+    { category: 'Conectividade', item: 'Dados móveis (com SIM card)' },
+    { category: 'Sensores e Segurança', item: 'Face ID / Touch ID' },
+    { category: 'Sensores e Segurança', item: 'Sensores de proximidade e luz ambiente' },
+    { category: 'Sensores e Segurança', item: 'Giroscópio e acelerômetro (rotação da tela)' },
+  ],
+  MacBook: [
+    { category: 'Condição Física', item: 'Inspecionar carcaça e tela' },
+    { category: 'Condição Física', item: 'Verificar dobradiças da tela' },
+    { category: 'Tela', item: 'Verificar pixels mortos ou "stains"' },
+    { category: 'Tela', item: 'Teste de brilho e cores' },
+    { category: 'Tela', item: 'Câmera (funcionalidade e qualidade)' },
+    { category: 'Teclado e Trackpad', item: 'Testar todas as teclas (incluindo retroiluminação)' },
+    { category: 'Teclado e Trackpad', item: 'Testar todas as funções do trackpad (clique, gestos)' },
+    { category: 'Teclado e Trackpad', item: 'Touch Bar (se aplicável)' },
+    { category: 'Bateria e Carregamento', item: 'Saúde da bateria (ciclos, condição)' },
+    { category: 'Bateria e Carregamento', item: 'Testar carregador e porta MagSafe/USB-C' },
+    { category: 'Portas e Conexões', item: 'Testar todas as portas USB/Thunderbolt' },
+    { category: 'Portas e Conexões', item: 'Testar porta HDMI/SD (se aplicável)' },
+    { category: 'Portas e Conexões', item: 'Saída de áudio (P2)' },
+    { category: 'Desempenho e Áudio', item: 'Alto-falantes e microfones' },
+    { category: 'Desempenho e Áudio', item: 'Verificação de disco (Utilitário de Disco)' },
+    { category: 'Conectividade', item: 'Wi-Fi (conectar e navegar)' },
+    { category: 'Conectividade', item: 'Bluetooth (conectar a acessório)' },
+  ],
+  iPad: [
+    { category: 'Condição Física', item: 'Inspecionar chassi e tela' },
+    { category: 'Condição Física', item: 'Verificar botões físicos' },
+    { category: 'Tela', item: 'Teste de touch screen completo' },
+    { category: 'Tela', item: 'Verificar pixels mortos ou manchas' },
+    { category: 'Tela', item: 'Teste de brilho e True Tone' },
+    { category: 'Câmeras', item: 'Câmera traseira (Foto, Vídeo)' },
+    { category: 'Câmeras', item: 'Câmera frontal (Foto, Vídeo, Center Stage)' },
+    { category: 'Áudio', item: 'Alto-falantes estéreo (todos)' },
+    { category: 'Áudio', item: 'Microfones' },
+    { category: 'Bateria e Carregamento', item: 'Saúde da bateria (se disponível)' },
+    { category: 'Bateria e Carregamento', item: 'Teste de carregamento via porta USB-C/Lightning' },
+    { category: 'Conectividade', item: 'Wi-Fi e Bluetooth' },
+    { category: 'Conectividade', item: 'Dados móveis (se aplicável)' },
+    { category: 'Sensores e Acessórios', item: 'Face ID / Touch ID' },
+    { category: 'Sensores e Acessórios', item: 'Apple Pencil (pareamento, escrita, toque duplo)' },
+    { category: 'Sensores e Acessórios', item: 'Smart Connector (se aplicável)' },
+  ],
+  iPod: [
+    { category: 'Condição Física', item: 'Inspecionar chassi e tela' },
+    { category: 'Condição Física', item: 'Verificar botão Home (se aplicável)' },
+    { category: 'Tela', item: 'Teste de touch screen' },
+    { category: 'Tela', item: 'Verificar tela por danos ou manchas' },
+    { category: 'Bateria e Carregamento', item: 'Verificar se carrega e segura carga' },
+    { category: 'Bateria e Carregamento', item: 'Inspecionar porta de carregamento' },
+    { category: 'Áudio', item: 'Saída de fone de ouvido (P2)' },
+    { category: 'Áudio', item: 'Alto-falante interno' },
+    { category: 'Conectividade', item: 'Wi-Fi conecta e navega' },
+    { category: 'Conectividade', item: 'Bluetooth conecta a acessório' },
+    { category: 'Funcionalidades', item: 'Sincronização com computador (iTunes/Finder)' },
+    { category: 'Funcionalidades', item: 'Câmeras (frontal e traseira, se houver)' },
+  ],
+  AirPods: [
+    { category: 'Condição Física', item: 'Limpeza dos fones e do estojo' },
+    { category: 'Condição Física', item: 'Verificar grades dos microfones e alto-falantes' },
+    { category: 'Pareamento', item: 'Pareamento com dispositivo Apple' },
+    { category: 'Pareamento', item: 'Reconexão ao abrir o estojo' },
+    { category: 'Áudio', item: 'Testar áudio em ambos os fones (L/R)' },
+    { category: 'Áudio', item: 'Áudio espacial e cancelamento de ruído (se aplicável)' },
+    { category: 'Microfones', item: 'Testar microfones em chamada ou gravação de voz' },
+    { category: 'Bateria e Carregamento', item: 'Estojo carrega os fones' },
+    { category: 'Bateria e Carregamento', item: 'Estojo carrega via cabo/wireless' },
+    { category: 'Bateria e Carregamento', item: 'Verificar status da bateria no widget' },
+    { category: 'Sensores e Controles', item: 'Detecção de uso (pausa ao remover do ouvido)' },
+    { category: 'Sensores e Controles', item: 'Controles de toque/força (play, pause, etc)' },
+  ],
+};
+
+export const generateChecklist = async (deviceType: Device): Promise<Checklist> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const checklistTemplate = PREDEFINED_CHECKLISTS[deviceType] || [];
+      const checklistWithIds: Checklist = checklistTemplate.map((item, index) => ({
+        ...item,
+        id: `${deviceType}-${Date.now()}-${index}`,
+      }));
+      resolve(checklistWithIds);
+    }, 300); // Simulate network delay for a better UX
+  });
+};
