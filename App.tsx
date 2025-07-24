@@ -59,82 +59,50 @@ const App: React.FC = () => {
   }, [checklist]);
 
   const handleCopy = () => {
-    const date = new Date().toLocaleDateString('pt-BR');
-    let report = `*Doutor iPhone - Relatório de Verificação*\n\n`;
+    const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const totalItems = checklist.length;
+    const totalChecked = Object.values(checkedItems).filter(Boolean).length;
+
+    let status = 'INCOMPLETO';
+    if (totalItems > 0) {
+        if (totalChecked === totalItems) {
+            status = 'APROVADO';
+        } else if (totalChecked > 0) {
+            status = 'APROVADO COM RESSALVAS';
+        } else {
+            status = 'PENDENTE DE VERIFICAÇÃO';
+        }
+    }
+
+    let report = `*Relatório de Verificação - Doutor iPhone*\n`;
+    report += `====================================\n\n`;
     report += `*Dispositivo:* ${selectedDevice}\n`;
     report += `*Ordem de Serviço:* ${serviceOrder || 'N/A'}\n`;
-    report += `*Data:* ${date}\n`;
-    report += `------------------------------------\n\n`;
+    report += `*Data:* ${date}\n\n`;
+    
+    report += `*Resumo da Verificação:*\n`;
+    report += `*- Status:* ${status}\n`;
+    report += `*- Itens Verificados:* ${totalChecked} de ${totalItems}\n\n`;
+    
+    report += `====================================\n`;
+    report += `*Checklist Detalhado:*\n\n`;
 
     Object.entries(groupedChecklist).forEach(([category, items]) => {
       const checkedCount = items.filter(item => checkedItems[item.id]).length;
-      report += `*${category}* (${checkedCount}/${items.length})\n`;
+      const categoryStatusIcon = checkedCount === items.length ? '✅' : (checkedCount > 0 ? '⚠️' : '❌');
+      
+      report += `${categoryStatusIcon} *${category}* (${checkedCount}/${items.length})\n`;
       items.forEach(item => {
-        report += `${checkedItems[item.id] ? '✅' : '❌'} ${item.item}\n`;
+        const itemStatus = checkedItems[item.id] ? '[OK]' : '[FALHA]';
+        report += `  ${itemStatus} ${item.item}\n`;
         if (comments[item.id]) {
-          report += `   - _Observação:_ ${comments[item.id]}\n`;
+          report += `    - _Obs:_ ${comments[item.id].replace(/\n/g, ' ')}\n`;
         }
       });
       report += '\n';
     });
+    
+    report += `====================================\n`;
+    report += `Gerado por Doutor iPhone Check System\n`;
 
-    navigator.clipboard.writeText(report);
-  };
-  
-  const renderContent = () => {
-    switch(viewMode) {
-      case 'setup':
-        return <SetupView 
-                  devices={DEVICES}
-                  selectedDevice={selectedDevice}
-                  onSelectDevice={setSelectedDevice}
-                  serviceOrder={serviceOrder}
-                  onServiceOrderChange={setServiceOrder}
-                  onGenerate={handleGenerate}
-                />;
-      case 'loading':
-        return <LoadingSpinner />;
-      case 'checklist':
-        return <ChecklistView 
-                  checklist={checklist}
-                  checkedItems={checkedItems}
-                  comments={comments}
-                  onToggleCheck={handleToggleCheck}
-                  onCommentChange={handleCommentChange}
-                  onCopy={handleCopy}
-                  onGoBack={handleGoBack}
-                  selectedDevice={selectedDevice}
-                  serviceOrder={serviceOrder}
-                  groupedChecklist={groupedChecklist}
-               />
-      case 'error':
-        return (
-          <div className="text-center text-red-500 bg-red-50 p-8 rounded-xl flex flex-col items-center justify-center h-full space-y-4">
-            <h2 className="text-xl font-bold">Erro ao Carregar Checklist</h2>
-            <p>{error}</p>
-            <button
-              onClick={handleGoBack}
-              className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Tentar Novamente
-            </button>
-          </div>
-        );
-      default:
-        return null;
-    }
-  }
-
-
-  return (
-    <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col">
-      <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
-        {renderContent()}
-      </main>
-      <Footer />
-    </div>
-  );
-};
-
-export default App;
+    navigator
