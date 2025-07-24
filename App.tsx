@@ -62,8 +62,9 @@ const App: React.FC = () => {
     const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const totalItems = checklist.length;
     const totalChecked = Object.values(checkedItems).filter(Boolean).length;
+    const totalFailed = totalItems - totalChecked;
 
-    let status = 'INCOMPLETO';
+    let status = 'PENDENTE';
     if (totalItems > 0) {
         if (totalChecked === totalItems) {
             status = 'APROVADO';
@@ -74,35 +75,97 @@ const App: React.FC = () => {
         }
     }
 
-    let report = `*Relatório de Verificação - Doutor iPhone*\n`;
-    report += `====================================\n\n`;
+    let report = `*Relatório de Verificação - Doutor iPhone*\n\n`;
     report += `*Dispositivo:* ${selectedDevice}\n`;
     report += `*Ordem de Serviço:* ${serviceOrder || 'N/A'}\n`;
     report += `*Data:* ${date}\n\n`;
-    
-    report += `*Resumo da Verificação:*\n`;
-    report += `*- Status:* ${status}\n`;
-    report += `*- Itens Verificados:* ${totalChecked} de ${totalItems}\n\n`;
-    
-    report += `====================================\n`;
-    report += `*Checklist Detalhado:*\n\n`;
+
+    report += `*STATUS GERAL: ${status}*\n\n`;
+    report += `*Resumo da Análise:*\n`;
+    report += `  • Itens Aprovados: ${totalChecked} de ${totalItems}\n`;
+    if (totalFailed > 0 && status !== 'PENDENTE DE VERIFICAÇÃO') {
+      report += `  • Itens com Falha: ${totalFailed}\n`;
+    }
+    report += `\n`;
+
+    report += `*Checklist Detalhado:*\n`;
+    report += `---------------------------------------\n`;
 
     Object.entries(groupedChecklist).forEach(([category, items]) => {
-      const checkedCount = items.filter(item => checkedItems[item.id]).length;
-      const categoryStatusIcon = checkedCount === items.length ? '✅' : (checkedCount > 0 ? '⚠️' : '❌');
-      
-      report += `${categoryStatusIcon} *${category}* (${checkedCount}/${items.length})\n`;
+      report += `\n*_${category}_*\n`;
       items.forEach(item => {
         const itemStatus = checkedItems[item.id] ? '[OK]' : '[FALHA]';
-        report += `  ${itemStatus} ${item.item}\n`;
+        report += `${itemStatus} ${item.item}\n`;
         if (comments[item.id]) {
-          report += `    - _Obs:_ ${comments[item.id].replace(/\n/g, ' ')}\n`;
+          report += `    Obs: ${comments[item.id].replace(/\n/g, ' ')}\n`;
         }
       });
-      report += '\n';
     });
     
-    report += `====================================\n`;
-    report += `Gerado por Doutor iPhone Check System\n`;
+    report += `\n---------------------------------------\n`;
+    report += `Gerado pelo Doutor iPhone Check System.`;
 
-    navigator
+    navigator.clipboard.writeText(report).catch(err => {
+        console.error('Falha ao copiar relatório: ', err);
+    });
+  };
+
+  const renderContent = () => {
+    switch (viewMode) {
+      case 'loading':
+        return <LoadingSpinner />;
+      case 'error':
+        return (
+          <div className="text-center text-red-600 bg-red-100 p-4 rounded-lg">
+            <p className="font-bold">Ocorreu um erro</p>
+            <p>{error}</p>
+            <button
+              onClick={handleGoBack}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        );
+      case 'checklist':
+        return (
+          <ChecklistView
+            checklist={checklist}
+            checkedItems={checkedItems}
+            comments={comments}
+            groupedChecklist={groupedChecklist}
+            onToggleCheck={handleToggleCheck}
+            onCommentChange={handleCommentChange}
+            onCopy={handleCopy}
+            onGoBack={handleGoBack}
+            selectedDevice={selectedDevice}
+            serviceOrder={serviceOrder}
+          />
+        );
+      case 'setup':
+      default:
+        return (
+          <SetupView
+            devices={DEVICES}
+            selectedDevice={selectedDevice}
+            onSelectDevice={setSelectedDevice}
+            serviceOrder={serviceOrder}
+            onServiceOrderChange={setServiceOrder}
+            onGenerate={handleGenerate}
+          />
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-grow container mx-auto px-4 py-8">
+        {renderContent()}
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default App;
