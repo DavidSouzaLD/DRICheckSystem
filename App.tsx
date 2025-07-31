@@ -94,7 +94,7 @@ const App: React.FC = () => {
     Object.entries(groupedChecklist).forEach(([category, items]) => {
       report += `\n*_${category}_*\n`;
       items.forEach(item => {
-        const itemStatus = checkedItems[item.id] ? '[OK]' : '[FALHA]';
+        const itemStatus = checkedItems[item.id] ? '✅' : '❌';
         report += `${itemStatus} ${item.item}\n`;
         if (comments[item.id]) {
           report += `    Obs: ${comments[item.id].replace(/\n/g, ' ')}\n`;
